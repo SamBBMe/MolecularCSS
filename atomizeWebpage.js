@@ -1,12 +1,4 @@
 const puppeteer = require('puppeteer');
-const FLAG_TYPE_DEF = "flago"
-
-let atomicLabelGenerator = 0;
-let elementRulePairings = new Map();
-let ruleAtomicPairings = new Map();
-let elementAtomicPairings = new Map();
-let a;
-
 
 async function initializePage() {
  const documentElements = await (async () => {
@@ -18,7 +10,7 @@ async function initializePage() {
         let elementIndex = 0;
         return [...elements].map(element => {
           return {
-              element: elementIndex++, 
+              elementIndex: elementIndex++, 
               styles: JSON.parse(JSON.stringify(window.getComputedStyle(element)))
             };
         });
@@ -48,7 +40,6 @@ class CSSRule {
 
 class DocumentParser {
     atomicLabelCounter = 0;
-    elementRulePairings = new Map();
     ruleAtomicPairings = new Map();
     elementAtomicPairings = new Map();
     documentElements = null;
@@ -58,22 +49,20 @@ class DocumentParser {
         console.log(this.documentElements);
     }
 
-    setDocumentElements(document) {
-        this.documentElements = document;
-    }
-
-    parseCSSFromElement( htmlElement ) {
-        console.log("hi");
-    }
-
     generateAtomicLabel() {
         return String.fromCharCode(atomicLabelCounter)
     }
 
-    parseDocument( document ) {
-        for( const element of documentElements ) {
-            this.parseCSSFromElement( element )
+    generateRuleAtomicPairings() {
+        for(const element of documentElements) {
+            for(const rule in element.styles) {
+                
+            }
         }
+    }
+
+    generateElementAtomicParings() {
+
     }
 }
 
