@@ -19,6 +19,8 @@ async function initializePage() {
     return documentElements;
  })()
  let document = new DocumentParser(documentElements);
+ document.generateRuleAtomicPairings();
+ document.generateElementAtomicParings();
 }
 
 class CSSRule {
@@ -41,28 +43,36 @@ class CSSRule {
 class DocumentParser {
     atomicLabelCounter = 0;
     ruleAtomicPairings = new Map();
-    elementAtomicPairings = new Map();
+    elementAtomicPairings = new Array();
     documentElements = null;
 
     constructor( documentElements ) {
         this.documentElements = documentElements;
-        console.log(this.documentElements);
     }
 
     generateAtomicLabel() {
-        return String.fromCharCode(atomicLabelCounter)
+        return String.fromCharCode(this.atomicLabelCounter++)
     }
 
     generateRuleAtomicPairings() {
-        for(const element of documentElements) {
+        for(const element of this.documentElements) {
             for(const rule in element.styles) {
-                
+                if(!this.ruleAtomicPairings.get(`${rule}:${element.styles[rule]}`)) {
+                    this.ruleAtomicPairings.set(`${rule}:${element.styles[rule]}`, this.generateAtomicLabel());
+                }
             }
         }
     }
 
     generateElementAtomicParings() {
-
+        for(const element of this.documentElements) {
+            this.elementAtomicPairings[element.elementIndex] = new Array(this.documentElements[element.elementIndex].styles.length);
+            for(const rule in element.styles) {
+                this.elementAtomicPairings[element.elementIndex].push(
+                    this.ruleAtomicPairings.get(`${rule}:${element.styles[rule]}`)
+                );
+            }
+        }
     }
 }
 
