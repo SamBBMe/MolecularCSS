@@ -1,0 +1,14 @@
+{
+  "name": "seniorresearchsem2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "atomizeWebpage.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "sam b",
+  "license": "ISC",
+  "dependencies": {
+    "puppeteer": "^2.0.0"
+  }
+}
