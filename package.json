@@ -9,6 +9,7 @@
   "author": "sam b",
   "license": "ISC",
   "dependencies": {
+    "fs-extra": "^8.1.0",
     "puppeteer": "^2.0.0"
   }
 }
