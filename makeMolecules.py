@@ -6,25 +6,37 @@ from sklearn import metrics #Import scikit-learn metrics module for accuracy cal
 from sklearn.tree import export_graphviz
 from sklearn.externals.six import StringIO  
 from IPython.display import Image  
-import pydotplus
+#import pydotplus
 from graphviz import Graph, Digraph
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
 
-target_column = 0
+rule_css_pd = pd.read_csv("./temp/atomicClassDefs.csv", header=0, delimiter="|")
+rule_css = dict(zip(list(rule_css_pd[rule_css_pd.columns[0]]), list(rule_css_pd[rule_css_pd.columns[1]])))
+print(rule_css)
+
 pima = pd.read_csv("./temp/atomicClassData.csv", header=0)
+print("Rows x Columns:", pima.shape)
+pima = pima.assign(targetid=pd.Series(np.arange(0, pima.shape[0])).values)
+target_column = pima.shape[1]-1
+print("Target column:", target_column)
 trees = [None] * len(pima.columns.tolist())
 threads = [None] * len(pima.columns.tolist())
 
 def makeTree(target_column):
-    feature_cols = pima.columns.tolist()[0:target_column-1] + pima.columns.tolist()[target_column+1:]
+    feature_cols = pima.columns.tolist()[0:target_column-1]
     X = pima[feature_cols]
     y = pima[pima.columns.tolist()[target_column]]
+    print("X")
+    print(X)
+    print("y")
+    print(y)
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=1)
 
     clf = DecisionTreeClassifier()
     clf = clf.fit(X_train,y_train)
+    print(clf)
     y_pred = clf.predict(X_test)
 
     n_nodes = clf.tree_.node_count
@@ -33,9 +45,13 @@ def makeTree(target_column):
     feature = clf.tree_.feature
     threshold = clf.tree_.threshold
 
-    #dot_data = StringIO()
-    #graph = export_graphviz(clf, out_file=None)
-    #graph = pydotplus.graph_from_dot_data(dot_data.getvalue())
+    dot_data = StringIO()
+    graph = export_graphviz(clf, out_file=None)
+    print(graph)
+    with open('tree.dot', 'w') as f:
+        f.write(graph)
+
+#graph = pydotplus.graph_from_dot_data(dot_data.getvalue())
 
     def find_path(node_numb, path, x):
         path.append(node_numb)
@@ -64,6 +80,15 @@ def makeTree(target_column):
         mask = mask.replace("\t", "")
         return mask
 
+    def get_rule_css(key, path, column_names):
+        css = "prop_%s {\n" % key
+        for index, node in enumerate(path):
+            if index!=len(path)-1:
+                if (children_left[node] != path[index+1]):
+                    css += "\t%s;\n" % rule_css[column_names[feature[node]]]
+        css += "}\n"
+        return css
+
     if n_nodes > 1:
         leave_id = clf.apply(X_test)
 
@@ -75,15 +100,18 @@ def makeTree(target_column):
 
         rules = {}
         for key in paths:
-            rules[key] = get_rule(paths[key], pima.columns)
+            rules[key] = get_rule_css(key, paths[key], pima.columns)
+            print(rules[key])
 
-        print(rules)
+#print(rules)
 
     return clf
 
+makeTree(target_column)
+
 #split dataset in features and target variable
-with ThreadPoolExecutor(max_workers=1) as executor:
-    for i in range(0, 500):
-        threads[i] = executor.submit(makeTree, target_column)
-        target_column += 1
+#with ThreadPoolExecutor(max_workers=1) as executor:
+#    for i in range(0, 500):
+#        threads[i] = executor.submit(makeTree, target_column)
+#        target_column += 1
         

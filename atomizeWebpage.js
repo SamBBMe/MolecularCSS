@@ -99,7 +99,12 @@ class DocumentParser {
         headers = headers.join(",");
         body.unshift(headers);
         body = body.join("\r\n");
-        fs.outputFileSync("./temp/atomicClassData.csv", body)
+        fs.outputFileSync("./temp/atomicClassData.csv", body);
+        let classDefs = new Array();
+        for( let element of this.ruleAtomicPairings.keys() ) {
+            classDefs.push(`${this.ruleAtomicPairings.get(element)}|${element}`)
+        }
+        fs.outputFileSync("./temp/atomicClassDefs.csv", classDefs.join("\n"));
         return body;
     }
 }
