@@ -12,9 +12,9 @@ import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
 import json
 
-rule_css_pd = pd.read_csv("./temp/atomicClassDefs.csv", header=0, delimiter="|")
+rule_css_pd = pd.read_csv("./temp/atomicClassDefs.csv", header=None, delimiter="|")
 rule_css = dict(zip(list(rule_css_pd[rule_css_pd.columns[0]]), list(rule_css_pd[rule_css_pd.columns[1]])))
-#print(rule_css)
+print(rule_css)
 
 pima = pd.read_csv("./temp/atomicClassData.csv", header=0)
 #print("Rows x Columns:", pima.shape)
@@ -47,7 +47,7 @@ def makeTree(target_column):
     threshold = clf.tree_.threshold
 
     dot_data = StringIO()
-    graph = export_graphviz(clf, out_file=None)
+    graph = export_graphviz(clf, out_file=None, feature_names=list(map(lambda x: x+":"+rule_css[x], feature_cols)))
     #print(graph)
     with open('./temp/tree.dot', 'w') as f:
         f.write(graph)

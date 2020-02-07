@@ -5,9 +5,9 @@ async function initializePage() {
  const documentElements = await (async () => {
     const browser = await puppeteer.launch()
     const page = await browser.newPage()
-    await page.goto('file:///C:/Users/SamBBMe/Desktop/Senior%20Research%20Semester%202/test.html')
+    await page.goto('http://www.csszengarden.com/217/')
     const documentElements = await page.evaluate(() => {
-        const elements = document.body.getElementsByTagName("*");
+        const elements = document.getElementsByTagName("*");
         let elementIndex = 0;
         return [...elements].map(element => {
           return {

@@ -1,6 +1,6 @@
 const fs = require('fs-extra')
 const parse5 = require('parse5');
-let htmlFile = fs.readFileSync("test.html", "utf8");
+let htmlFile = fs.readFileSync("csszengarden.html", "utf8");
 const document = parse5.parse(htmlFile);
 let molecules = fs.readJSONSync("./temp/molecules.json");
 
@@ -39,33 +39,37 @@ class HTMLParser {
 
     setClassString( node, newClassString ) {
         let needsClassString = true;
-        for( let attribute of node.attrs ) {
-            if(attribute.name === "class") {
-                attribute.value = newClassString;
-                needsClassString = false;
-                break;
+        if(node.attrs) {
+            for( let attribute of node.attrs ) {
+                if(attribute.name === "class") {
+                    attribute.value = newClassString;
+                    needsClassString = false;
+                    break;
+                }
             }
-        }
 
-        if( needsClassString ) {
-            node.attrs.push({
-                name: "class",
-                value: newClassString
-            })
+            if( needsClassString ) {
+                node.attrs.push({
+                    name: "class",
+                    value: newClassString
+                })
+            }
         }
     }
 
     getClassString(node) {
-        for( let attribute of node.attrs ) {
-            if(attribute.name === "class") {
-                return attribute.value;
+        if(node.attrs) {
+            for( let attribute of node.attrs ) {
+                if(attribute.name === "class") {
+                    return attribute.value;
+                }
             }
-        }
 
-        node.attrs.push({
-            name: "class",
-            value: ""
-        })
+            node.attrs.push({
+                name: "class",
+                value: ""
+            })
+        }
         return "";
     }
 
@@ -84,10 +88,13 @@ class HTMLParser {
                     nodeCSSClasses.push( molecule.className );
                     this.moleculesUsed.push( molecule );
                     for( let atomicClass of molecule.atomicRules ) {
-                        nodeCSSClasses.splice( nodeCSSClasses.indexOf(atomicClass), 1 );
+                        //nodeCSSClasses.splice( nodeCSSClasses.indexOf(atomicClass), 1 );
                     }
                 }
             }
+            console.log(nodeCSSClasses);
+            nodeCSSClasses = nodeCSSClasses.filter(function(cls) { return cls.startsWith("prop_") });
+            console.log(nodeCSSClasses);
             this.setClassString(node, nodeCSSClasses.join(" "))
         }
 
@@ -99,9 +106,7 @@ class HTMLParser {
     }
 
     molecularizeHTML() {
-        for( let node of this.document ) {
-            this.molecularizeNode(node);
-        }
+        this.molecularizeNode(this.document);
     }
 
     checkIfBody(node) {
@@ -122,13 +127,13 @@ class HTMLParser {
         for( let node of this.document.childNodes ) {
             this.checkIfBody(node);
         }
-        this.document = this.document.childNodes;
+        //this.document = this.document.childNodes;
         //console.log(this.document);
     }
 
     atomizeNode(node) {
-        //console.log(`nodeName: ${node.nodeName} eA.Length: ${this.elementAtomicPairings.length} \t Counter: ${this.currentNodeCounter}`)
-        if(node.nodeName !== "#text") {
+        console.log(`nodeName: ${node.nodeName} eA.Length: ${this.elementAtomicPairings.length} \t Counter: ${this.currentNodeCounter}`)
+        if(node.nodeName !== "#text" && node.nodeName !== "#comment") {
             this.setClassString(node, this.elementAtomicPairings[this.currentNodeCounter].join(" "));
             this.currentNodeCounter++;
         }
@@ -140,9 +145,7 @@ class HTMLParser {
     }
 
     atomizeHTML() {
-        for( let node of this.document ) {
-            this.atomizeNode(node);
-        }
+        this.atomizeNode(this.document);
     }
 
     createHTMLFile() {
