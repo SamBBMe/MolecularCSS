@@ -5,7 +5,7 @@ async function initializePage() {
  const documentElements = await (async () => {
     const browser = await puppeteer.launch()
     const page = await browser.newPage()
-    await page.goto('https://www.amazon.com/')
+    await page.goto('file:///C:/Users/SamBBMe/Desktop/Senior%20Research%20Semester%202/test.html')
     const documentElements = await page.evaluate(() => {
         const elements = document.body.getElementsByTagName("*");
         let elementIndex = 0;
@@ -23,25 +23,9 @@ async function initializePage() {
  document.generateRuleAtomicPairings();
  document.generateElementAtomicParings();
  document.generateAtomicTable();
+ document.writeDocumentToJSON();
  console.log("hi");
 }
-
-class CSSRule {
-    constructor(rule, value) {
-        if(typeof rule === "number") {
-            this.rule = value;
-            this.value = FLAG_TYPE_DEF;
-        } else {
-            this.rule = rule;
-            this.value = value;
-        }
-    }
-
-    stringifyRule(){
-        return `${this.rule}:${this.value}`;
-    }
-}
-
 
 class DocumentParser {
     atomicLabelCounter = 0;
@@ -106,6 +90,13 @@ class DocumentParser {
         }
         fs.outputFileSync("./temp/atomicClassDefs.csv", classDefs.join("\n"));
         return body;
+    }
+
+    writeDocumentToJSON() {
+        //console.log(JSON.stringify([...this.ruleAtomicPairings]))
+        fs.outputFileSync("./temp/documentElements.json", JSON.stringify(this.documentElements))
+        fs.outputFileSync("./temp/ruleAtomicPairings.json", JSON.stringify([...this.ruleAtomicPairings]))
+        fs.outputFileSync("./temp/elementAtomicPairings.json", JSON.stringify(this.elementAtomicPairings))
     }
 }
 
