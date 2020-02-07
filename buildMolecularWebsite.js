@@ -156,15 +156,6 @@ class HTMLParser {
         );
         
         for( let molecule of this.moleculesUsed ) {
-            console.log(
-                molecule.atomicRules.map(rule => {
-                    console.log(rule, "\t", atomicRulePairings.get(rule));
-                    return atomicRulePairings.get(rule);
-                }
-            ));
-
-            console.log("hi", atomicRulePairings.get("aeb"));
-
             CSSString += `.${molecule.className} {\n\t${ 
                 molecule.atomicRules.map(rule => {
                     return atomicRulePairings.get(rule).split(":").join(": ");
@@ -176,7 +167,13 @@ class HTMLParser {
             CSSString += `\n.${key} {\n\t${value.split(":").join(": ")};\n}\n`;
         }
 
-        atomicRulePairings.forEach((value, key, map) => CSSString += `\n.${key} {\n\t${value.split(":").join(": ")};\n}\n`);
+        atomicRulePairings.forEach((value, key, map) => {
+            if(isNaN(value.split(":")[0])) {
+                CSSString += `\n.${key} {\n\t${value.split(":").join(": ")};\n}\n`
+            } else {
+                CSSString += `\n.${key} {\n\t${value.split(":")[1]}: none;\n}\n`
+            }
+        });
     
         fs.outputFileSync("./output/test2.css", CSSString);
     }
