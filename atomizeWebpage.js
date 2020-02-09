@@ -1,21 +1,55 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs-extra')
 
+var JSONfn = {};
+
+JSONfn.stringify = function(obj) {
+    return JSON.stringify(obj,function(key, value){
+            return (typeof value === 'function' ) ? value.toString() : value;
+    });
+}
+
+JSONfn.parse = function(str) {
+    return JSON.parse(str,function(key, value){
+        if(typeof value != 'string') return value;
+        return ( value.substring(0,8) == 'function') ? eval('('+value+')') : value;
+    });
+}
+
 async function initializePage() {
  const documentElements = await (async () => {
     const browser = await puppeteer.launch()
     const page = await browser.newPage()
+    await page.setViewport({
+        width: 1920,
+        height: 4250,
+        deviceScaleFactor: 1
+    })
     await page.goto('http://www.csszengarden.com/217/')
+    await page.screenshot({path: './temp/puppeteer_snippet.png'});
     const documentElements = await page.evaluate(() => {
-        const elements = document.getElementsByTagName("*");
+        const elements = document.body.getElementsByTagName("*");
         let elementIndex = 0;
         return [...elements].map(element => {
-          return {
-              elementIndex: elementIndex++, 
-              styles: JSON.parse(JSON.stringify(window.getComputedStyle(element)))
+            let computedStyle = window.getComputedStyle(element);
+            let nonNumComputedStyles = JSON.parse(JSON.stringify(computedStyle));
+            let styles = {}
+            
+            for( let property in nonNumComputedStyles) {
+                if(nonNumComputedStyles[property] === '') continue;
+                if(isNaN(property)){
+                    styles[property] = nonNumComputedStyles[property]
+                } else {
+                    styles[nonNumComputedStyles[property]] = computedStyle.getPropertyValue(computedStyle[property]);                 
+                }
+            }
+            
+            return {
+                elementIndex: elementIndex++, 
+                styles: styles
             };
         });
-      });
+    });
     browser.close();
     return documentElements;
  })()
@@ -35,6 +69,7 @@ class DocumentParser {
 
     constructor( documentElements ) {
         this.documentElements = documentElements;
+        console.log(documentElements[0]);
     }
 
     generateAtomicLabel() {
@@ -100,4 +135,5 @@ class DocumentParser {
     }
 }
 
+//fs.outputFileSync("./temp/puppeteer_snippet.png");
 initializePage();

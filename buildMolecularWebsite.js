@@ -25,7 +25,7 @@ class HTMLParser {
     elementAtomicPairings;
     currentNodeCounter = 0;
     molecules;
-    moleculesUsed = [];
+    moleculesUsed = new Set();
 
     constructor( document, documentElements, ruleAtomicPairings, elementAtomicPairings, molecules ) {
         this.document = document;
@@ -76,9 +76,12 @@ class HTMLParser {
     molecularizeNode(node) {
         if(node.nodeName !== "#text") {
             let nodeCSSClasses = this.getClassString(node).split(" ");
+            let atomicClassesUsed = [];
             for( let molecule of this.molecules ) {
                 let containsAtomicClasses = true;
+                let moleculeAtoms = [];
                 for( let atomicClass of molecule.atomicRules ) {
+                    moleculeAtoms.push(atomicClass);
                     if(!nodeCSSClasses.includes(atomicClass)) {
                         containsAtomicClasses = false;
                         break;
@@ -86,14 +89,15 @@ class HTMLParser {
                 }
                 if( containsAtomicClasses ) {
                     nodeCSSClasses.push( molecule.className );
-                    this.moleculesUsed.push( molecule );
-                    for( let atomicClass of molecule.atomicRules ) {
-                        //nodeCSSClasses.splice( nodeCSSClasses.indexOf(atomicClass), 1 );
-                    }
+                    atomicClassesUsed.concat( moleculeAtoms );
+                    this.moleculesUsed.add( molecule );
                 }
             }
+            for( let atomicClass of atomicClassesUsed ) {
+                nodeCSSClasses.splice( nodeCSSClasses.indexOf(atomicClass), 1 );
+            }
             console.log(nodeCSSClasses);
-            nodeCSSClasses = nodeCSSClasses.filter(function(cls) { return cls.startsWith("prop_") });
+            //nodeCSSClasses = nodeCSSClasses.filter(function(cls) { return cls.startsWith("prop_") });
             console.log(nodeCSSClasses);
             this.setClassString(node, nodeCSSClasses.join(" "))
         }
@@ -106,7 +110,10 @@ class HTMLParser {
     }
 
     molecularizeHTML() {
-        this.molecularizeNode(this.document);
+        for(let node of this.document) {
+            this.molecularizeNode(node);
+        }
+        
     }
 
     checkIfBody(node) {
@@ -127,8 +134,8 @@ class HTMLParser {
         for( let node of this.document.childNodes ) {
             this.checkIfBody(node);
         }
-        //this.document = this.document.childNodes;
-        //console.log(this.document);
+        this.document = this.document.childNodes;
+        console.log(this.document);
     }
 
     atomizeNode(node) {
@@ -145,7 +152,11 @@ class HTMLParser {
     }
 
     atomizeHTML() {
-        this.atomizeNode(this.document);
+        //this.document.forEach(this.atomizeNode);
+        for(let node of this.document) {
+            this.atomizeNode(node);
+        }
+        //this.atomizeNode(this.document);
     }
 
     createHTMLFile() {
@@ -174,7 +185,7 @@ class HTMLParser {
             if(isNaN(value.split(":")[0])) {
                 CSSString += `\n.${key} {\n\t${value.split(":").join(": ")};\n}\n`
             } else {
-                CSSString += `\n.${key} {\n\t${value.split(":")[1]}: none;\n}\n`
+                CSSString += `\n.${key} {\n\t${value.split(":")[1]}: ;\n}\n`
             }
         });
     
