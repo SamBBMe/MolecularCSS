@@ -1,16 +1,39 @@
 const fs = require('fs-extra')
 const parse5 = require('parse5');
 let htmlFile = fs.readFileSync("csszengarden.html", "utf8");
-const document = parse5.parse(htmlFile);
+let document = parse5.parse(htmlFile);
 let molecules = fs.readJSONSync("./temp/molecules.json");
 
 for( let i = 0; i < molecules.length; i++ ){
     molecules[i] = JSON.parse(molecules[i])
 }
+
 molecules.sort(function(a, b) {
     return b.atomicRules.length - a.atomicRules.length
 })
 
+let styleSheetFound = false;
+for(let [i, node] of document.childNodes[1].childNodes[0].childNodes.entries()) {
+    if( node.nodeName = "link" && node.attrs) {
+        for( let attr of node.attrs ) {
+            if(attr.name === "rel" && (attr.value === "stylesheet" || attr.value === "alternate")) {
+                if( styleSheetFound ) {
+                    console.log(i)
+                    console.log(document.childNodes[1].childNodes[0].childNodes[7].nodeName)
+                    document.childNodes[1].childNodes[0].childNodes.splice(i, 1);
+                    console.log(document.childNodes[1].childNodes[0].childNodes[7].nodeName)
+                } else {
+                    styleSheetFound = true;
+                    for( let attr of node.attrs) {
+                        if( attr.name === "href" ) {
+                            attr.value = "test2.css";
+                        }   
+                    }
+                }
+            }
+        }
+    }
+}
 let documentElements = fs.readJSONSync("./temp/documentElements.json");
 let ruleAtomicPairings = new Map(fs.readJSONSync("./temp/ruleAtomicPairings.json"));
 let elementAtomicPairings = fs.readJSONSync("./temp/elementAtomicPairings.json");
@@ -96,13 +119,13 @@ class HTMLParser {
             for( let atomicClass of atomicClassesUsed ) {
                 nodeCSSClasses.splice( nodeCSSClasses.indexOf(atomicClass), 1 );
             }
-            console.log(nodeCSSClasses);
+            //console.log(nodeCSSClasses);
             //nodeCSSClasses = nodeCSSClasses.filter(function(cls) { return cls.startsWith("prop_") });
-            console.log(nodeCSSClasses);
+            //console.log(nodeCSSClasses);
             this.setClassString(node, nodeCSSClasses.join(" "))
         }
 
-        if(node.childNodes) {
+        if(node.childNodes && node.nodeName !== "html") {
             for( let childNode of node.childNodes ) {
                 this.molecularizeNode(childNode);
             }
@@ -131,20 +154,21 @@ class HTMLParser {
     }
     
     findBody() {
+        let htmlTag = document.childNodes[1]
         for( let node of this.document.childNodes ) {
             this.checkIfBody(node);
         }
-        this.document = this.document.childNodes;
-        console.log(this.document);
+        this.document = [htmlTag].concat(this.document);
+        //console.log(this.document);
     }
 
     atomizeNode(node) {
-        console.log(`nodeName: ${node.nodeName} eA.Length: ${this.elementAtomicPairings.length} \t Counter: ${this.currentNodeCounter}`)
-        if(node.nodeName !== "#text" && node.nodeName !== "#comment") {
+        //console.log(`nodeName: ${node.nodeName} eA.Length: ${this.elementAtomicPairings.length} \t Counter: ${this.currentNodeCounter}`)
+        if(!node.nodeName.startsWith("#")) {
             this.setClassString(node, this.elementAtomicPairings[this.currentNodeCounter].join(" "));
             this.currentNodeCounter++;
         }
-        if(node.childNodes) {
+        if(node.childNodes && node.nodeName !== "html") {
             for( let childNode of node.childNodes ) {
                 this.atomizeNode(childNode);
             }
@@ -193,7 +217,7 @@ class HTMLParser {
     }
 }
 
-
+//console.log(document.childNodes[1].attrs)
 let htmlParser = new HTMLParser(document, documentElements, ruleAtomicPairings, elementAtomicPairings, molecules);
 htmlParser.atomizeHTML();
 htmlParser.molecularizeHTML();

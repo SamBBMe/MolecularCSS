@@ -28,7 +28,8 @@ async function initializePage() {
     await page.goto('http://www.csszengarden.com/217/')
     await page.screenshot({path: './temp/puppeteer_snippet.png'});
     const documentElements = await page.evaluate(() => {
-        const elements = document.body.getElementsByTagName("*");
+        const elements = [ document.getElementsByTagName("html")[0], document.body]
+            .concat([...document.body.getElementsByTagName("*")]);
         let elementIndex = 0;
         return [...elements].map(element => {
             let computedStyle = window.getComputedStyle(element);
