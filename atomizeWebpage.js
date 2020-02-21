@@ -75,7 +75,7 @@ class DocumentParser {
 
     generateAtomicLabel() {
         function stringFromNum(n) {
-            return (n >= 26 ? stringFromNum((n / 26 >> 0) - 1) : '') + 'abcdefghijklmnopqrstuvwxyz'[n % 26 >> 0];
+            return (n >= 25 ? stringFromNum((n / 25 >> 0) - 1) : '') + 'ABCDEFGHIJKLMOPQRSTUVWXYZ'[n % 25 >> 0];
         }
         return stringFromNum(this.atomicLabelCounter++);
     }

@@ -99,6 +99,7 @@ class HTMLParser {
     molecularizeNode(node) {
         if(node.nodeName !== "#text") {
             let nodeCSSClasses = this.getClassString(node).split(" ");
+            let moleculesUsed = [];
             let atomicClassesUsed = [];
             for( let molecule of this.molecules ) {
                 let containsAtomicClasses = true;
@@ -111,7 +112,7 @@ class HTMLParser {
                     }
                 }
                 if( containsAtomicClasses ) {
-                    nodeCSSClasses.push( molecule.className );
+                    moleculesUsed.push( molecule.className );
                     atomicClassesUsed.concat( moleculeAtoms );
                     this.moleculesUsed.add( molecule );
                 }
@@ -122,7 +123,7 @@ class HTMLParser {
             //console.log(nodeCSSClasses);
             //nodeCSSClasses = nodeCSSClasses.filter(function(cls) { return cls.startsWith("prop_") });
             //console.log(nodeCSSClasses);
-            this.setClassString(node, nodeCSSClasses.join(" "))
+            this.setClassString(node, moleculesUsed.join(" "))
         }
 
         if(node.childNodes && node.nodeName !== "html") {
