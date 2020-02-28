@@ -36,6 +36,7 @@ def makeTree(target_column):
     #print("y")
     #print(y)
 
+
     clf = DecisionTreeClassifier(criterion="entropy")
     print(clf)
     clf = clf.fit(X,y)
@@ -46,6 +47,15 @@ def makeTree(target_column):
     children_right = clf.tree_.children_right
     feature = clf.tree_.feature
     threshold = clf.tree_.threshold
+
+    common_cols_included = []
+    root_node = feature_cols[clf.tree_.feature[0]]
+    print("Root node", root_node)
+    for col in pima.columns.tolist()[:-1]:
+        if len(pima[col]) > 0 and pima[col].all():
+            common_cols_included.append(col)
+    print("Common atoms:", common_cols_included)
+    css_path_components = {"root": list(map(lambda colname: rule_css[colname], common_cols_included))}
 
     dot_data = StringIO()
     graph = export_graphviz(clf, out_file=None, feature_names=list(map(lambda x: x+":"+re.sub(r'"', '\\"', rule_css[x]), feature_cols)))
@@ -72,19 +82,23 @@ def makeTree(target_column):
             "className": "",
             "atomicRules": []
         }
-        query = " and ".join(path)
-        query = re.sub(r'not', '~', query)
-        shared_rows = pima.query(query)
-        print(shared_rows)
-        print("Path: %s, query: %s, shared rows: %d" % ("_".join(path), query, len(shared_rows)))
-        shared_atoms = []
-        for col in shared_rows.columns.tolist()[:-1]:
-            if len(shared_rows[col]) > 0 and shared_rows[col].all():
-                shared_atoms.append(col)
-        classDict["atomicRules"] = shared_atoms
-        classDict["className"] = "_".join(path)
-        #css += "}\n"
-        print(classDict)
+        cols_included = list(common_cols_included)
+        for path_idx in range(len(path)):
+            subpath = path[0:path_idx+1]
+            if "_".join(subpath) in css_path_components: continue
+            query = " and ".join(subpath)
+            query = re.sub(r'not', '~', query)
+            shared_rows = pima.query(query)
+            print("Path: %s, query: %s, shared rows: %d" % ("_".join(subpath), query, len(shared_rows)))
+            shared_atoms = []
+            for col in shared_rows.columns.tolist()[:-1]:
+                if col not in cols_included and len(shared_rows[col]) > 0 and shared_rows[col].all():
+                    shared_atoms.append(col)
+                    cols_included.append(col)
+            print("Shared:", shared_atoms)
+            if len(shared_atoms) > 0:
+                css_path_components["root_" + "_".join(subpath)] = list(map(lambda colname: rule_css[colname], shared_atoms))
+        classDict["className"] = "root_" + "_".join(path)
         return json.dumps(classDict)
 
     if n_nodes > 1:
@@ -114,7 +128,12 @@ def makeTree(target_column):
         print(json.dumps(rules))
         with open('./temp/molecules.json', 'w') as f:
             f.write(json.dumps(rules))
-        
+        with open('./output/test2.css', 'w') as f:
+            for subpath in css_path_components:
+                f.write(".%s {\n" % subpath)
+                for cssprop in css_path_components[subpath]:
+                    f.write("\t%s;\n" % cssprop)
+                f.write("}\n\n")
 
 #print(rules)
 

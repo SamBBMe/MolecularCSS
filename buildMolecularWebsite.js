@@ -18,10 +18,10 @@ for(let [i, node] of document.childNodes[1].childNodes[0].childNodes.entries()) 
         for( let attr of node.attrs ) {
             if(attr.name === "rel" && (attr.value === "stylesheet" || attr.value === "alternate")) {
                 if( styleSheetFound ) {
-                    console.log(i)
-                    console.log(document.childNodes[1].childNodes[0].childNodes[7].nodeName)
+                    //console.log(i)
+                    //console.log(document.childNodes[1].childNodes[0].childNodes[7].nodeName)
                     document.childNodes[1].childNodes[0].childNodes.splice(i, 1);
-                    console.log(document.childNodes[1].childNodes[0].childNodes[7].nodeName)
+                    //console.log(document.childNodes[1].childNodes[0].childNodes[7].nodeName)
                 } else {
                     styleSheetFound = true;
                     for( let attr of node.attrs) {
@@ -126,8 +126,36 @@ class HTMLParser {
             //console.log(nodeCSSClasses);
             this.setClassString(node, moleculesUsed.join(" "))
             */
-            console.log(`Node index: ${this.nodeIndex} Node name: ${node.nodeName} Class name: ${this.molecules[0].className}`);
-            this.setClassString(node, this.molecules[this.nodeIndex++].className);
+            console.log(`Node index: ${this.nodeIndex} Node name: ${node.nodeName} Class name: ${this.molecules[this.nodeIndex].className}`);
+            console.log(node.parentNode.attrs);
+            let splitClassString = "";
+            let classStringComponents = this.molecules[this.nodeIndex++].className.split("_");
+            for(let i = 0; i < classStringComponents.length; i++) {
+                let classStringPart = "";
+                for(let j = 0; j <= i; j++) {
+                    classStringPart += classStringComponents[j];
+                    if(j < i) { classStringPart += "_"; }
+                }
+                let found = false;
+                if(node.parentNode.attrs !== undefined) {
+                    for(let k = 0; k < node.parentNode.attrs.length; k++) {
+                        if(node.parentNode.attrs[k].name == "class") {
+                            let parentClass = node.parentNode.attrs[k];
+                            console.log("parentClass: '" + parentClass.value + "'");
+                            console.log("classStringPart: '" + classStringPart + "'");
+                            if(parentClass.value.includes(classStringPart + " ")) {
+                                console.log("found");
+                                found = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if(!found) {
+                    splitClassString += classStringPart + " ";
+                }
+            }
+            this.setClassString(node, splitClassString);
         }
 
         if(node.childNodes && node.nodeName !== "html") {
@@ -226,7 +254,7 @@ let htmlParser = new HTMLParser(document, documentElements, ruleAtomicPairings, 
 htmlParser.atomizeHTML();
 htmlParser.molecularizeHTML();
 htmlParser.createHTMLFile();
-htmlParser.createCSSFile();
+//htmlParser.createCSSFile();
 
 
 //console.log(molecules)
