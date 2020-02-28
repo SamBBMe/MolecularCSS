@@ -28,6 +28,7 @@ threads = [None] * len(pima.columns.tolist())
 
 def makeTree(target_column):
     feature_cols = pima.columns.tolist()[0:target_column-1]
+    print(feature_cols)
     X = pima[feature_cols]
     y = pima[pima.columns.tolist()[target_column]]
     #print("X")
@@ -35,7 +36,7 @@ def makeTree(target_column):
     #print("y")
     #print(y)
 
-    clf = DecisionTreeClassifier()
+    clf = DecisionTreeClassifier(criterion="entropy")
     print(clf)
     clf = clf.fit(X,y)
     #print(clf)
@@ -72,13 +73,13 @@ def makeTree(target_column):
             "atomicRules": []
         }
         query = " and ".join(path)
+        query = re.sub(r'not', '~', query)
         shared_rows = pima.query(query)
         print(shared_rows)
         print("Path: %s, query: %s, shared rows: %d" % ("_".join(path), query, len(shared_rows)))
         shared_atoms = []
         for col in shared_rows.columns.tolist()[:-1]:
-            print(col)
-            if shared_rows[col].all():
+            if len(shared_rows[col]) > 0 and shared_rows[col].all():
                 shared_atoms.append(col)
         classDict["atomicRules"] = shared_atoms
         classDict["className"] = "_".join(path)
@@ -89,6 +90,7 @@ def makeTree(target_column):
     if n_nodes > 1:
         leave_id = clf.apply(X)
         node_indicator = clf.decision_path(X)
+        print(clf.tree_.feature)
         paths = {}
         for sample_id in range(len(X)):
             path = []
@@ -97,13 +99,13 @@ def makeTree(target_column):
             for node_id in node_index:
                 if leave_id[sample_id] == node_id:
                     continue
-                if (X.iat[sample_id, node_id] <= threshold[node_id]):
-                    threshold_sign = "~"
+                if (X.iat[sample_id, clf.tree_.feature[node_id]] <= threshold[node_id]):
+                    threshold_sign = "not"
                 else:
                     threshold_sign = ""
-                path.append("%s%s" % (threshold_sign, pima.columns[node_id]))
+                path.append("%s%s" % (threshold_sign, feature_cols[clf.tree_.feature[node_id]]))
             print(path)
-            paths[sample_id] = sorted(path)
+            paths[sample_id] = path
 
         rules = []
         for sample_id in paths:

@@ -41,13 +41,19 @@ async function initializePage() {
                 if(isNaN(property)){
                     styles[property] = nonNumComputedStyles[property]
                 } else {
-                    styles[nonNumComputedStyles[property]] = computedStyle.getPropertyValue(computedStyle[property]);                 
+                    styles[nonNumComputedStyles[property]] = computedStyle.getPropertyValue(computedStyle[property]);
                 }
+            }
+            fixedStyles = {}
+            for(let property in styles) {
+                if(property.startsWith("-webkit") || property.startsWith("webkit") || property.startsWith("perspective")) continue;
+                fixed_property = property.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
+                fixedStyles[fixed_property] = styles[property];
             }
             
             return {
                 elementIndex: elementIndex++, 
-                styles: styles
+                styles: fixedStyles
             };
         });
     });

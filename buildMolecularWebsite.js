@@ -8,9 +8,9 @@ for( let i = 0; i < molecules.length; i++ ){
     molecules[i] = JSON.parse(molecules[i])
 }
 
-molecules.sort(function(a, b) {
-    return b.atomicRules.length - a.atomicRules.length
-})
+//molecules.sort(function(a, b) {
+//    return b.atomicRules.length - a.atomicRules.length
+//})
 
 let styleSheetFound = false;
 for(let [i, node] of document.childNodes[1].childNodes[0].childNodes.entries()) {
@@ -49,6 +49,7 @@ class HTMLParser {
     currentNodeCounter = 0;
     molecules;
     moleculesUsed = new Set();
+    nodeIndex = 0;
 
     constructor( document, documentElements, ruleAtomicPairings, elementAtomicPairings, molecules ) {
         this.document = document;
@@ -97,8 +98,8 @@ class HTMLParser {
     }
 
     molecularizeNode(node) {
-        if(node.nodeName !== "#text") {
-            let nodeCSSClasses = this.getClassString(node).split(" ");
+        if(!node.nodeName.startsWith("#")) {
+            /*let nodeCSSClasses = this.getClassString(node).split(" ");
             let moleculesUsed = [];
             let atomicClassesUsed = [];
             for( let molecule of this.molecules ) {
@@ -124,6 +125,9 @@ class HTMLParser {
             //nodeCSSClasses = nodeCSSClasses.filter(function(cls) { return cls.startsWith("prop_") });
             //console.log(nodeCSSClasses);
             this.setClassString(node, moleculesUsed.join(" "))
+            */
+            console.log(`Node index: ${this.nodeIndex} Node name: ${node.nodeName} Class name: ${this.molecules[0].className}`);
+            this.setClassString(node, this.molecules[this.nodeIndex++].className);
         }
 
         if(node.childNodes && node.nodeName !== "html") {
@@ -134,10 +138,9 @@ class HTMLParser {
     }
 
     molecularizeHTML() {
-        for(let node of this.document) {
-            this.molecularizeNode(node);
-        }
-        
+       for(let node of this.document) {
+           this.molecularizeNode(node);
+      }
     }
 
     checkIfBody(node) {
@@ -194,7 +197,7 @@ class HTMLParser {
             [...this.ruleAtomicPairings].map(pairing => pairing.reverse())
         );
         
-        for( let molecule of this.moleculesUsed ) {
+        for( let molecule of this.molecules ) {
             CSSString += `.${molecule.className} {\n\t${ 
                 molecule.atomicRules.map(rule => {
                     return atomicRulePairings.get(rule).split(":").join(": ");
