@@ -12,15 +12,17 @@ import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
 import json
 import re
+import sys
 
 rule_css_pd = pd.read_csv("./temp/atomicClassDefs.csv", header=None, delimiter="|")
 rule_css = dict(zip(list(rule_css_pd[rule_css_pd.columns[0]]), list(rule_css_pd[rule_css_pd.columns[1]])))
-print(rule_css)
-
+#print(rule_css)
+print(sys.argv)
+print('./output/' + sys.argv[1] + '/moleculerWebsite.css')
 pima = pd.read_csv("./temp/atomicClassData.csv", header=0)
 #print("Rows x Columns:", pima.shape)
 pima = pima.assign(targetid=pd.Series(np.arange(0, pima.shape[0])).values)
-print(pima)
+#print(pima)
 target_column = pima.shape[1]-1
 #print("Target column:", target_column)
 trees = [None] * len(pima.columns.tolist())
@@ -28,7 +30,7 @@ threads = [None] * len(pima.columns.tolist())
 
 def makeTree(target_column):
     feature_cols = pima.columns.tolist()[0:target_column-1]
-    print(feature_cols)
+    #print(feature_cols)
     X = pima[feature_cols]
     y = pima[pima.columns.tolist()[target_column]]
     #print("X")
@@ -50,11 +52,11 @@ def makeTree(target_column):
 
     common_cols_included = []
     root_node = feature_cols[clf.tree_.feature[0]]
-    print("Root node", root_node)
+    #print("Root node", root_node)
     for col in pima.columns.tolist()[:-1]:
         if len(pima[col]) > 0 and pima[col].all():
             common_cols_included.append(col)
-    print("Common atoms:", common_cols_included)
+    #print("Common atoms:", common_cols_included)
     css_path_components = {"root": list(map(lambda colname: rule_css[colname], common_cols_included))}
 
     dot_data = StringIO()
@@ -89,13 +91,13 @@ def makeTree(target_column):
             query = " and ".join(subpath)
             query = re.sub(r'not', '~', query)
             shared_rows = pima.query(query)
-            print("Path: %s, query: %s, shared rows: %d" % ("_".join(subpath), query, len(shared_rows)))
+            #print("Path: %s, query: %s, shared rows: %d" % ("_".join(subpath), query, len(shared_rows)))
             shared_atoms = []
             for col in shared_rows.columns.tolist()[:-1]:
                 if col not in cols_included and len(shared_rows[col]) > 0 and shared_rows[col].all():
                     shared_atoms.append(col)
                     cols_included.append(col)
-            print("Shared:", shared_atoms)
+            #print("Shared:", shared_atoms)
             if len(shared_atoms) > 0:
                 css_path_components["root_" + "_".join(subpath)] = list(map(lambda colname: rule_css[colname], shared_atoms))
         classDict["className"] = "root_" + "_".join(path)
@@ -104,7 +106,7 @@ def makeTree(target_column):
     if n_nodes > 1:
         leave_id = clf.apply(X)
         node_indicator = clf.decision_path(X)
-        print(clf.tree_.feature)
+        #print(clf.tree_.feature)
         paths = {}
         for sample_id in range(len(X)):
             path = []
@@ -118,17 +120,17 @@ def makeTree(target_column):
                 else:
                     threshold_sign = ""
                 path.append("%s%s" % (threshold_sign, feature_cols[clf.tree_.feature[node_id]]))
-            print(path)
+            #print(path)
             paths[sample_id] = path
 
         rules = []
         for sample_id in paths:
             rules.append(get_rule_css(paths[sample_id], pima.columns))
             
-        print(json.dumps(rules))
+        #print(json.dumps(rules))
         with open('./temp/molecules.json', 'w') as f:
             f.write(json.dumps(rules))
-        with open('./output/test2.css', 'w') as f:
+        with open('./output/' + sys.argv[1] + '/molecularWebsite.css', 'w') as f:
             for subpath in css_path_components:
                 f.write(".%s {\n" % subpath)
                 for cssprop in css_path_components[subpath]:

@@ -9,8 +9,11 @@
   "author": "sam b",
   "license": "ISC",
   "dependencies": {
+    "cross-spawn": "^7.0.1",
     "fs-extra": "^8.1.0",
     "parse5": "^5.1.1",
-    "puppeteer": "^2.0.0"
+    "puppeteer": "^2.0.0",
+    "request": "^2.88.2",
+    "yargs": "^15.3.1"
   }
 }

@@ -1,21 +1,6 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs-extra')
 
-var JSONfn = {};
-
-JSONfn.stringify = function(obj) {
-    return JSON.stringify(obj,function(key, value){
-            return (typeof value === 'function' ) ? value.toString() : value;
-    });
-}
-
-JSONfn.parse = function(str) {
-    return JSON.parse(str,function(key, value){
-        if(typeof value != 'string') return value;
-        return ( value.substring(0,8) == 'function') ? eval('('+value+')') : value;
-    });
-}
-
 async function initializePage() {
  const documentElements = await (async () => {
     const browser = await puppeteer.launch()
@@ -25,8 +10,8 @@ async function initializePage() {
         height: 4250,
         deviceScaleFactor: 1
     })
-    await page.goto('http://www.csszengarden.com/217/')
-    await page.screenshot({path: './temp/puppeteer_snippet.png'});
+    await page.goto(`http://${process.argv[2]}`)
+    await page.screenshot({path: `./output/${process.argv[2].split(".")[1]}/puppeteer_snippet.png`});
     const documentElements = await page.evaluate(() => {
         const elements = [ document.getElementsByTagName("html")[0], document.body]
             .concat([...document.body.getElementsByTagName("*")]);
@@ -57,6 +42,9 @@ async function initializePage() {
             };
         });
     });
+    const response = await page.goto(`http://${process.argv[2]}`);
+    let htmlTemplate = await response.text();
+    fs.writeFileSync(`./output/${process.argv[2].split(".")[1]}/original.html`,  htmlTemplate);
     browser.close();
     return documentElements;
  })()

@@ -1,7 +1,9 @@
 const fs = require('fs-extra')
 const parse5 = require('parse5');
-let htmlFile = fs.readFileSync("csszengarden.html", "utf8");
+let htmlFile = fs.readFileSync(`./output/${process.argv[2]}/original.html`, "utf8");
 let document = parse5.parse(htmlFile);
+//console.log(htmlFile)
+//console.log(document)
 let molecules = fs.readJSONSync("./temp/molecules.json");
 
 for( let i = 0; i < molecules.length; i++ ){
@@ -12,28 +14,6 @@ for( let i = 0; i < molecules.length; i++ ){
 //    return b.atomicRules.length - a.atomicRules.length
 //})
 
-let styleSheetFound = false;
-for(let [i, node] of document.childNodes[1].childNodes[0].childNodes.entries()) {
-    if( node.nodeName = "link" && node.attrs) {
-        for( let attr of node.attrs ) {
-            if(attr.name === "rel" && (attr.value === "stylesheet" || attr.value === "alternate")) {
-                if( styleSheetFound ) {
-                    //console.log(i)
-                    //console.log(document.childNodes[1].childNodes[0].childNodes[7].nodeName)
-                    document.childNodes[1].childNodes[0].childNodes.splice(i, 1);
-                    //console.log(document.childNodes[1].childNodes[0].childNodes[7].nodeName)
-                } else {
-                    styleSheetFound = true;
-                    for( let attr of node.attrs) {
-                        if( attr.name === "href" ) {
-                            attr.value = "test2.css";
-                        }   
-                    }
-                }
-            }
-        }
-    }
-}
 let documentElements = fs.readJSONSync("./temp/documentElements.json");
 let ruleAtomicPairings = new Map(fs.readJSONSync("./temp/ruleAtomicPairings.json"));
 let elementAtomicPairings = fs.readJSONSync("./temp/elementAtomicPairings.json");
@@ -43,6 +23,7 @@ let elementAtomicPairings = fs.readJSONSync("./temp/elementAtomicPairings.json")
 
 class HTMLParser {
     document;
+    styleSheetElement;
     documentElements;
     ruleAtomicPairings;
     elementAtomicPairings;
@@ -126,9 +107,10 @@ class HTMLParser {
             //console.log(nodeCSSClasses);
             this.setClassString(node, moleculesUsed.join(" "))
             */
-            console.log(`Node index: ${this.nodeIndex} Node name: ${node.nodeName} Class name: ${this.molecules[this.nodeIndex].className}`);
-            console.log(node.parentNode.attrs);
+            //console.log(`Node index: ${this.nodeIndex} Node name: ${node.nodeName} Class name: ${this.molecules[this.nodeIndex].className}`);
+            //console.log(node.parentNode.attrs);
             let splitClassString = "";
+            console.log("Molecules length: " + this.molecules.length + "`\tNode Index: " + this.nodeIndex + "\tNode name: " + JSON.stringify(this.molecules[this.nodeIndex]));
             let classStringComponents = this.molecules[this.nodeIndex++].className.split("_");
             for(let i = 0; i < classStringComponents.length; i++) {
                 let classStringPart = "";
@@ -141,10 +123,10 @@ class HTMLParser {
                     for(let k = 0; k < node.parentNode.attrs.length; k++) {
                         if(node.parentNode.attrs[k].name == "class") {
                             let parentClass = node.parentNode.attrs[k];
-                            console.log("parentClass: '" + parentClass.value + "'");
-                            console.log("classStringPart: '" + classStringPart + "'");
+                            //console.log("parentClass: '" + parentClass.value + "'");
+                            //console.log("classStringPart: '" + classStringPart + "'");
                             if(parentClass.value.includes(classStringPart + " ")) {
-                                console.log("found");
+                                //console.log("found");
                                 found = true;
                                 break;
                             }
@@ -166,9 +148,9 @@ class HTMLParser {
     }
 
     molecularizeHTML() {
-       for(let node of this.document) {
-           this.molecularizeNode(node);
-      }
+        for(let node of this.document) {
+            this.molecularizeNode(node);
+        }
     }
 
     checkIfBody(node) {
@@ -215,11 +197,41 @@ class HTMLParser {
         //this.atomizeNode(this.document);
     }
 
-    createHTMLFile() {
-        fs.outputFileSync("./output/test2.html", parse5.serialize(document));
+    attachStyleSheet( stylesheetName ) {
+        this.stripStylesheetRefs( this.document[0], false );
+        for( let attr of this.styleSheetElement.attrs ) {
+            if(attr.name === 'href') {
+                attr.value = `./${stylesheetName}.css`;
+            }
+        }
     }
 
-    createCSSFile() {
+    stripStylesheetRefs( headNode, firstNodeFound ) {
+        for( let node of headNode.childNodes ) {
+            if(node.nodeName === "link") {
+                for( let attribute of node.attrs ) {
+                    if( attribute.name === "rel" && attribute.value === "stylesheet" ) {
+                        console.log(node);
+                        if(firstNodeFound) {
+                            node = null
+                        } else {
+                            this.styleSheetElement = node;
+                            firstNodeFound = true;
+                        }
+                    }
+                }
+            } else if( node.childNodes ) {
+                this.stripStylesheetRefs(node, firstNodeFound);
+            }
+        }
+    }
+
+    createHTMLFile( HTMLfileName, CSSfileName ) {
+        this.attachStyleSheet( CSSfileName )
+        fs.outputFileSync(`./output/${ process.argv[2] }/${ HTMLfileName }.html`, parse5.serialize(document));
+    }
+
+    createCSSFile( fileName ) {
         let CSSString = "";
         let atomicRulePairings = new Map(
             [...this.ruleAtomicPairings].map(pairing => pairing.reverse())
@@ -245,15 +257,17 @@ class HTMLParser {
             }
         });
     
-        fs.outputFileSync("./output/test2.css", CSSString);
+        fs.outputFileSync(`./output/${ process.argv[2] }/${ fileName }.css`, CSSString);
     }
 }
 
 //console.log(document.childNodes[1].attrs)
 let htmlParser = new HTMLParser(document, documentElements, ruleAtomicPairings, elementAtomicPairings, molecules);
 htmlParser.atomizeHTML();
+htmlParser.createHTMLFile("atomicWebsite", "atomicWebsite");
+htmlParser.createCSSFile("atomicWebsite");
 htmlParser.molecularizeHTML();
-htmlParser.createHTMLFile();
+htmlParser.createHTMLFile("molecularWebsite", "molecularWebsite");
 //htmlParser.createCSSFile();
 
 
