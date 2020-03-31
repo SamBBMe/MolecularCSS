@@ -110,7 +110,7 @@ class HTMLParser {
             //console.log(`Node index: ${this.nodeIndex} Node name: ${node.nodeName} Class name: ${this.molecules[this.nodeIndex].className}`);
             //console.log(node.parentNode.attrs);
             let splitClassString = "";
-            console.log("Molecules length: " + this.molecules.length + "`\tNode Index: " + this.nodeIndex + "\tNode name: " + JSON.stringify(this.molecules[this.nodeIndex]));
+            //console.log("Molecules length: " + this.molecules.length + "`\tNode Index: " + this.nodeIndex + "\tNode name: " + JSON.stringify(this.molecules[this.nodeIndex]));
             let classStringComponents = this.molecules[this.nodeIndex++].className.split("_");
             for(let i = 0; i < classStringComponents.length; i++) {
                 let classStringPart = "";
@@ -178,7 +178,18 @@ class HTMLParser {
 
     atomizeNode(node) {
         //console.log(`nodeName: ${node.nodeName} eA.Length: ${this.elementAtomicPairings.length} \t Counter: ${this.currentNodeCounter}`)
+        if(node.nodeName === "img") {
+            console.log(node.nodeName);
+        }
         if(!node.nodeName.startsWith("#")) {
+            for( let attribute of node.attrs ) {
+                //console.log(attribute.name)
+                if( attribute.name === "data-src" || attribute.name === "src" ) {
+                    if( !attribute.value.startsWith("http") ) {
+                        attribute.value = `http://${process.argv[2]}${attribute.value}`;
+                    }
+                }
+            }
             this.setClassString(node, this.elementAtomicPairings[this.currentNodeCounter].join(" "));
             this.currentNodeCounter++;
         }
@@ -211,12 +222,20 @@ class HTMLParser {
             if(node.nodeName === "link") {
                 for( let attribute of node.attrs ) {
                     if( attribute.name === "rel" && attribute.value === "stylesheet" ) {
-                        console.log(node);
+                        //console.log(node);
                         if(firstNodeFound) {
                             node = null
                         } else {
                             this.styleSheetElement = node;
                             firstNodeFound = true;
+                        }
+                    } else {
+                        for( let attribute of node.attrs ) {
+                            if( attribute.name === "href"  ) {
+                                if( !attribute.value.startsWith("http") ) {
+                                    attribute.value = `http://${process.argv[2]}${attribute.value}`;
+                                }
+                            }
                         }
                     }
                 }
