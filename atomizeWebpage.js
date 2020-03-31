@@ -14,7 +14,7 @@ async function initializePage() {
     await page.screenshot({path: `./output/${process.argv[2].split(".")[1]}/puppeteer_snippet.png`});
     const documentElements = await page.evaluate(() => {
         const elements = [ document.getElementsByTagName("html")[0], document.body]
-            .concat([...document.body.getElementsByTagName("*")]);
+            .concat([...document.body.querySelectorAll("*")]);
         let elementIndex = 0;
         return [...elements].map(element => {
             let computedStyle = window.getComputedStyle(element);
@@ -45,7 +45,7 @@ async function initializePage() {
         });
     });
     const response = await page.goto(`http://${process.argv[2]}`);
-    let htmlTemplate = await response.text();
+    let htmlTemplate = await page.evaluate(() => new XMLSerializer().serializeToString(document));
     fs.writeFileSync(`./output/${process.argv[2].split(".")[1]}/original.html`,  htmlTemplate);
     browser.close();
     return documentElements;
@@ -55,6 +55,7 @@ async function initializePage() {
  document.generateElementAtomicParings();
  document.generateAtomicTable();
  document.writeDocumentToJSON();
+ console.log(documentElements);
  console.log("hi");
 }
 
@@ -66,7 +67,7 @@ class DocumentParser {
 
     constructor( documentElements ) {
         this.documentElements = documentElements;
-        console.log(documentElements[0]);
+        //console.log(documentElements[0]);
     }
 
     generateAtomicLabel() {

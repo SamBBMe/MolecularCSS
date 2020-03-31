@@ -1,7 +1,7 @@
 const fs = require('fs-extra')
 const parse5 = require('parse5');
 let htmlFile = fs.readFileSync(`./output/${process.argv[2]}/original.html`, "utf8");
-let document = parse5.parse(htmlFile);
+let document = parse5.parse(htmlFile, {scriptingEnabled: false});
 //console.log(htmlFile)
 //console.log(document)
 let molecules = fs.readJSONSync("./temp/molecules.json");
@@ -18,6 +18,7 @@ let documentElements = fs.readJSONSync("./temp/documentElements.json");
 let ruleAtomicPairings = new Map(fs.readJSONSync("./temp/ruleAtomicPairings.json"));
 let elementAtomicPairings = fs.readJSONSync("./temp/elementAtomicPairings.json");
 
+let globalId = 0;
 //console.log(document);
 
 
@@ -80,6 +81,7 @@ class HTMLParser {
 
     molecularizeNode(node) {
         if(!node.nodeName.startsWith("#")) {
+            node.globalId = globalId++;
             /*let nodeCSSClasses = this.getClassString(node).split(" ");
             let moleculesUsed = [];
             let atomicClassesUsed = [];
@@ -138,13 +140,13 @@ class HTMLParser {
                     splitClassString += classStringPart + " ";
                 }
             }
-            //this.setClassString(node, splitClassString);
-            this.setClassString(node, originalClassString);
+            this.setClassString(node, splitClassString);
+            //this.setClassString(node, originalClassString);
         }
 
         if(node.childNodes && node.nodeName !== "html") {
             for( let childNode of node.childNodes ) {
-                console.log(childNode);
+                console.log(node.globalId + " " + node.nodeName + " => " + childNode.nodeName);
                 this.molecularizeNode(childNode);
             }
         }
