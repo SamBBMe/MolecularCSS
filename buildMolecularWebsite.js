@@ -110,8 +110,9 @@ class HTMLParser {
             //console.log(`Node index: ${this.nodeIndex} Node name: ${node.nodeName} Class name: ${this.molecules[this.nodeIndex].className}`);
             //console.log(node.parentNode.attrs);
             let splitClassString = "";
-            console.log("Molecules length: " + this.molecules.length + "`\tNode Index: " + this.nodeIndex + "\tNode name: " + JSON.stringify(this.molecules[this.nodeIndex]));
-            let classStringComponents = this.molecules[this.nodeIndex++].className.split("_");
+            console.log("Molecules length: " + this.molecules.length + "`\tNode Index: " + this.nodeIndex + "\tNode name: " + node.nodeName + "\tMolecule: " + JSON.stringify(this.molecules[this.nodeIndex]));
+            let originalClassString = this.molecules[this.nodeIndex++].className;
+            let classStringComponents = originalClassString.split("_");
             for(let i = 0; i < classStringComponents.length; i++) {
                 let classStringPart = "";
                 for(let j = 0; j <= i; j++) {
@@ -137,11 +138,13 @@ class HTMLParser {
                     splitClassString += classStringPart + " ";
                 }
             }
-            this.setClassString(node, splitClassString);
+            //this.setClassString(node, splitClassString);
+            this.setClassString(node, originalClassString);
         }
 
         if(node.childNodes && node.nodeName !== "html") {
             for( let childNode of node.childNodes ) {
+                console.log(childNode);
                 this.molecularizeNode(childNode);
             }
         }
@@ -263,9 +266,9 @@ class HTMLParser {
 
 //console.log(document.childNodes[1].attrs)
 let htmlParser = new HTMLParser(document, documentElements, ruleAtomicPairings, elementAtomicPairings, molecules);
-htmlParser.atomizeHTML();
-htmlParser.createHTMLFile("atomicWebsite", "atomicWebsite");
-htmlParser.createCSSFile("atomicWebsite");
+//htmlParser.atomizeHTML();
+//htmlParser.createHTMLFile("atomicWebsite", "atomicWebsite");
+//htmlParser.createCSSFile("atomicWebsite");
 htmlParser.molecularizeHTML();
 htmlParser.createHTMLFile("molecularWebsite", "molecularWebsite");
 //htmlParser.createCSSFile();

@@ -38,7 +38,9 @@ async function initializePage() {
             
             return {
                 elementIndex: elementIndex++, 
-                styles: fixedStyles
+                styles: fixedStyles,
+                tagName: element.tagName,
+                textContent: element.textContent
             };
         });
     });
