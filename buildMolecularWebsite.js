@@ -1,7 +1,7 @@
 const fs = require('fs-extra')
 const parse5 = require('parse5');
 let htmlFile = fs.readFileSync(`./output/${process.argv[2]}/original.html`, "utf8");
-let document = parse5.parse(htmlFile, {scriptingEnabled: false});
+let document = parse5.parse(htmlFile);
 //console.log(htmlFile)
 //console.log(document)
 let molecules = fs.readJSONSync("./temp/molecules.json");
@@ -112,7 +112,7 @@ class HTMLParser {
             //console.log(`Node index: ${this.nodeIndex} Node name: ${node.nodeName} Class name: ${this.molecules[this.nodeIndex].className}`);
             //console.log(node.parentNode.attrs);
             let splitClassString = "";
-            console.log("Molecules length: " + this.molecules.length + "`\tNode Index: " + this.nodeIndex + "\tNode name: " + node.nodeName + "\tMolecule: " + JSON.stringify(this.molecules[this.nodeIndex]));
+            //console.log("Molecules length: " + this.molecules.length + "`\tNode Index: " + this.nodeIndex + "\tNode name: " + node.nodeName + "\tMolecule: " + JSON.stringify(this.molecules[this.nodeIndex]));
             let originalClassString = this.molecules[this.nodeIndex++].className;
             let classStringComponents = originalClassString.split("_");
             for(let i = 0; i < classStringComponents.length; i++) {
@@ -146,7 +146,7 @@ class HTMLParser {
 
         if(node.childNodes && node.nodeName !== "html") {
             for( let childNode of node.childNodes ) {
-                console.log(node.globalId + " " + node.nodeName + " => " + childNode.nodeName);
+                //console.log(node.globalId + " " + node.nodeName + " => " + childNode.nodeName);
                 this.molecularizeNode(childNode);
             }
         }
@@ -182,9 +182,8 @@ class HTMLParser {
     }
 
     atomizeNode(node) {
-        //console.log(`nodeName: ${node.nodeName} eA.Length: ${this.elementAtomicPairings.length} \t Counter: ${this.currentNodeCounter}`)
-        if(node.nodeName === "img") {
-            console.log(node.nodeName);
+        if(node.nodeName === "noscript") {
+            //console.log(node.childNodes);
         }
         if(!node.nodeName.startsWith("#")) {
             for( let attribute of node.attrs ) {
@@ -287,9 +286,9 @@ class HTMLParser {
 
 //console.log(document.childNodes[1].attrs)
 let htmlParser = new HTMLParser(document, documentElements, ruleAtomicPairings, elementAtomicPairings, molecules);
-//htmlParser.atomizeHTML();
-//htmlParser.createHTMLFile("atomicWebsite", "atomicWebsite");
-//htmlParser.createCSSFile("atomicWebsite");
+htmlParser.atomizeHTML();
+htmlParser.createHTMLFile("atomicWebsite", "atomicWebsite");
+htmlParser.createCSSFile("atomicWebsite");
 htmlParser.molecularizeHTML();
 htmlParser.createHTMLFile("molecularWebsite", "molecularWebsite");
 //htmlParser.createCSSFile();
