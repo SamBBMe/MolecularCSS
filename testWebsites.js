@@ -13,4 +13,5 @@ for( const website of websitesToTest ) {
     //console.log(result);
     result = spawn.sync('node', ['buildMolecularWebsite.js', website.split(".")[1]], { stdio: 'inherit' });
     //console.log(result);
+    result = spawn.sync('node', ['recordBuiltWebsiteStatistics.js', website.split(".")[1]], { stdio: 'inherit' });
 }

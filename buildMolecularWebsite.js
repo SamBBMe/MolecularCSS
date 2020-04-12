@@ -1,4 +1,4 @@
-const fs = require('fs-extra')
+const fs = require('fs-extra');
 const parse5 = require('parse5');
 let htmlFile = fs.readFileSync(`./output/${process.argv[2]}/original.html`, "utf8");
 let document = parse5.parse(htmlFile);
