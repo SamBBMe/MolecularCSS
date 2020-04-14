@@ -8,13 +8,13 @@ let atomicHTMLPath = `${websitePath}/atomicWebsite.html`;
 let atomicCSSPath = `${websitePath}/atomicWebsite.css`;
 let molecularHTMLPath = `${websitePath}/molecularWebsite.html`;
 let molecularCSSPath = `${websitePath}/molecularWebsite.css`;
-let originalWebsiteImagePath = `${websitePath}/puppeteer_snippet.png`;
-let builtWebsiteImagePath = `${websitePath}/builtWebsite.png`;
+let originalImagePath = `${websitePath}/puppeteer_snippet.png`;
+let builtImagePath = `${websitePath}/builtWebsite.png`;
 let imageDifferencePath = `${websitePath}/websiteDifferences.png`;
-let originalWebsiteDocumentElementsPath = `${websitePath}/original_documentElements.json`;
-let builtWebsiteDocumentElementsPath = `${websitePath}/built_documentElements.json`;
+let originalDocumentElementsPath = `${websitePath}/original_documentElements.json`;
+let builtDocumentElementsPath = `${websitePath}/built_documentElements.json`;
 let statisticsFilePath = `${websitePath}/websiteStatistics.json`;
-fs.copySync('./temp/documentElements.json', originalWebsiteDocumentElementsPath);
+fs.copySync('./temp/documentElements.json', originalDocumentElementsPath);
 console.log(molecularHTMLPath);
 
 let websiteStatistics = {
@@ -36,7 +36,7 @@ async function initializePage() {
             deviceScaleFactor: 1
         })
         await page.goto(molecularHTMLPath)
-        await page.screenshot({ path: builtWebsiteImagePath });
+        await page.screenshot({ path: builtImagePath });
         const documentElements = await page.evaluate(() => {
             const elements = [document.getElementsByTagName("html")[0], document.body]
                 .concat([...document.body.querySelectorAll("*")]);
@@ -69,14 +69,14 @@ async function initializePage() {
                 };
             });
         });
-        fs.writeFileSync(builtWebsiteDocumentElementsPath, JSON.stringify(documentElements));
+        fs.writeFileSync(builtDocumentElementsPath, JSON.stringify(documentElements));
         browser.close();
         return documentElements;
     })();
 }
 
 async function getImageDiff() {
-    let imageData = await compareImages(await fs.readFile(originalWebsiteImagePath), await fs.readFile(builtWebsiteImagePath));
+    let imageData = await compareImages(await fs.readFile(originalImagePath), await fs.readFile(builtImagePath));
     websiteStatistics.imageSimilarity = imageData.rawMisMatchPercentage;
     await fs.writeFile(imageDifferencePath, imageData.getBuffer());
     console.log(imageData);
@@ -86,8 +86,8 @@ async function getImageDiff() {
 async function createStatistics() {
     await initializePage();
     await getImageDiff();
-    let original_documentElements = fs.readJSONSync(originalWebsiteDocumentElementsPath);
-    let built_documentElements = fs.readJsonSync(builtWebsiteDocumentElementsPath);
+    let original_documentElements = fs.readJSONSync(originalDocumentElementsPath);
+    let built_documentElements = fs.readJsonSync(builtDocumentElementsPath);
 
     let matchingElements = 0;
     for (let i = 0; i < original_documentElements.length; i++) {
