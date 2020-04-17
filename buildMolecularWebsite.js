@@ -228,7 +228,11 @@ class HTMLParser {
                     if( attribute.name === "rel" && attribute.value === "stylesheet" ) {
                         //console.log(node);
                         if(firstNodeFound) {
-                            node = null
+                            for( let attribute of node.attrs ) {
+                                if( attribute.name === "href"  ) {
+                                        attribute.value = ``;
+                                }
+                            }
                         } else {
                             this.styleSheetElement = node;
                             firstNodeFound = true;
